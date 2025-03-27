@@ -5,19 +5,23 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.pedidos.viewmodel.PedidoViewModel
 
+import com.example.pedidos.viewmodel.PedidoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CarritoScreen(carritoViewModel: CarritoViewModel,
-                  pedidoViewModel: PedidoViewModel) {
+fun CarritoScreen(carritoViewModel: CarritoViewModel, pedidoViewModel: PedidoViewModel) {
+    // Estado para controlar la visibilidad del diálogo
+    var showDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Carrito de Compras") })
@@ -99,20 +103,38 @@ fun CarritoScreen(carritoViewModel: CarritoViewModel,
 
                     Button(
                         onClick = {
+                            // Mostrar el diálogo al hacer clic en "Confirmar Pedido"
+                            showDialog = true
                             pedidoViewModel.guardarPedido(total)
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Confirmar Pedido")
                     }
-
                 }
             }
         }
     }
+
+    // Mostrar el diálogo si showDialog es true
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                // Ocultar el diálogo al hacer clic fuera de él
+                showDialog = false
+            },
+            title = { Text("Pedido Confirmado") },
+            text = { Text("Tu pedido ha sido confirmado.") },
+            confirmButton = {
+                Button(onClick = {
+                    // Ocultar el diálogo al hacer clic en "Aceptar"
+                    showDialog = false
+                    // Limpiar el carrito
+                    carritoViewModel.limpiarCarrito()
+                }) {
+                    Text("Aceptar")
+                }
+            }
+        )
+    }
 }
-
-
-
-
-

@@ -9,7 +9,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -43,6 +49,12 @@ fun MenuScreen(navController: NavController, carritoViewModel: CarritoViewModel)
 
 @Composable
 fun ComidaItem(comida: Comida, carritoViewModel: CarritoViewModel) {
+    // Encontramos el item en el carrito, si existe
+    val itemEnCarrito = carritoViewModel.carrito.find { it.comida.id == comida.id }
+
+    // Recordamos el estado de la cantidad localmente en cada ítem
+    var cantidad by remember { mutableStateOf(itemEnCarrito?.cantidad ?: 0) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -51,27 +63,62 @@ fun ComidaItem(comida: Comida, carritoViewModel: CarritoViewModel) {
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
                 painter = painterResource(id = comida.imagenRes),
                 contentDescription = comida.nombre,
-                modifier = Modifier.size(80.dp)
+                modifier = Modifier
+                    .size(80.dp)
+                    .padding(8.dp),
+                contentScale = ContentScale.Crop
             )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(8.dp)
+            ) {
+                Text(text = comida.nombre, style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = "$${comida.precio}", style = MaterialTheme.typography.bodyMedium)
+            }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            if (itemEnCarrito == null) {
+                Button(onClick = {
+                    carritoViewModel.agregarAlCarrito(comida)
+                    cantidad += 1
+                }) {
+                    Text("Añadir")
+                }
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Button(onClick = {
+                        carritoViewModel.disminuirCantidad(comida)
+                        if (cantidad > 0) cantidad-- // Actualizamos la cantidad localmente
+                    }) {
+                        Text("-")
+                    }
 
-            Column {
-                Text(comida.nombre, style = MaterialTheme.typography.bodyLarge)
-                Text("Precio: $${comida.precio}", style = MaterialTheme.typography.bodyMedium)
-                Button(
-                    onClick = { carritoViewModel.agregarAlCarrito(comida) },
-                    modifier = Modifier.padding(top = 8.dp)
-                ) {
-                    Text("Añadir al carrito")
+                    // Mostrar la cantidad en la UI
+                    Text(
+                        text = cantidad.toString(),
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+
+                    Button(onClick = {
+                        carritoViewModel.agregarAlCarrito(comida)
+                        cantidad++ // Actualizamos la cantidad localmente
+                    }) {
+                        Text("+")
+                    }
                 }
             }
         }
     }
 }
+
+
 
